@@ -1,4 +1,5 @@
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -68,11 +69,6 @@ public class Camera {
     }
 
     public void onUpdate(float delta){
-        //System.out.println("update");
-        /*if(KeyboardInput.isKeyDown(GLFW.GLFW_KEY_W)){
-            //System.out.println("W");
-            pos.add(new Vector3f(0,0,-1*delta));
-        }*/
         if(KeyboardInput.getKey(GLFW.GLFW_KEY_W) == 1){
             pos.add(new Vector3f(front).mul(delta));
         }
@@ -92,33 +88,17 @@ public class Camera {
             pos.add(new Vector3f(0,delta,0));
         }
 
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_UP) == 1){
-            zenith += delta/10;
-            if(zenith > Math.PI/2) zenith = (float)Math.PI/2;
-        }
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_DOWN) == 1){
-            zenith -= delta/10;
-            if(zenith < -Math.PI/2) zenith = -(float)Math.PI/2;
-        }
+        Vector2f v = MouseInput.getDeltaPos();
+        azimuth -= v.x*0.005f;
+        zenith -= v.y*0.005f;
 
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_LEFT) == 1){
-            azimuth += delta/10;
-        }
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_RIGHT) == 1){
-            azimuth -= delta/10;
-        }
-
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_O) == 1){
-            fov -= delta/180;
-        }
-        if(KeyboardInput.getKey(GLFW.GLFW_KEY_P) == 1){
-            fov += delta/180;
-        }
+        if(zenith < -Math.PI/2) zenith = -(float)Math.PI/2;
+        if(zenith > Math.PI/2) zenith = (float)Math.PI/2;
 
         recalculate();
     }
 
-    public void onRender(ShaderProgram shader){
+    public void forShader(ShaderProgram shader){
         shader.bind();
 
         shader.setWorldTransform(worldMat);

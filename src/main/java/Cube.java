@@ -1,4 +1,4 @@
-/*public class Cube extends Model {
+public class Cube extends Model {
 
     public static final float[] verts = {
             0.5f,0.5f,0.5f,
@@ -44,11 +44,54 @@
             -0.5f,-0.5f,-0.5f,
     };
 
+    public static final float[] cols = {
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+            0,1,0,
+    };
+
 
     public Cube(ShaderProgram sh){
-        super(verts);
+        super(verts,cols);
 
         super.setShader(sh);
     }
 }
-*/
