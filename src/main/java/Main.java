@@ -60,6 +60,8 @@ public class Main {
         Terrain t = new Terrain(shaderProgram, new Vector3f(0,0,0));
         Cube c = new Cube(wireShaderProgram);
 
+        t.setCursor(c);
+
         KeyboardInput.setWindow(win);
         MouseInput.init(win);
 
@@ -83,6 +85,9 @@ public class Main {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             //camera.setPos(new Vector3f((float)(Math.cos(time/1000000.0f)*1),(float)(Math.sin(time/1000000.0f)*1),20));
             camera.onUpdate(delta*20);
+
+            t.update(delta*5);
+
             camera.forShader(shaderProgram);
             camera.forShader(wireShaderProgram);
 

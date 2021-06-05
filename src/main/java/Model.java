@@ -43,7 +43,7 @@ public class Model {
 
         glBindBuffer(GL_ARRAY_BUFFER,0);
 
-        System.out.println("New model with " + tris + " verts. Buffer id: " + vb_id);
+        //System.out.println("New model with " + tris + " verts. Buffer id: " + vb_id);
     }
 
     public void setShader(ShaderProgram shader){

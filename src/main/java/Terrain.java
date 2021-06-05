@@ -1,21 +1,38 @@
 import org.joml.Random;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 
 public class Terrain {
 
-    private Model model;
+    private TerrainChunk[][][] chunks;
     private IntObject[][][] map;
-    int width = 100;
-    int height = 100;
-    int depth = 100;
+
+    private Model cursor;
+    private Vector3f cursorPos;
+
+    int widthChunks = 5;
+    int heightChunks = 5;
+    int depthChunks = 5;
+
+    int width;
+    int height;
+    int depth;
+
+    int chunkSize = 16;
 
     Random r;
 
     public Terrain(ShaderProgram sh, Vector3f translate){
         System.out.println("generating terrain...");
+
+        width = (widthChunks*chunkSize)+1;
+        height = (heightChunks*chunkSize)+1;
+        depth = (depthChunks*chunkSize)+1;
+
         map = new IntObject[width][height][depth];
+        chunks = new TerrainChunk[widthChunks][heightChunks][depthChunks];
 
         r = new Random(314159);
 
@@ -23,93 +40,106 @@ public class Terrain {
 
         generateMap();
 
-        IntObject[][][] arr = new IntObject[10][10][10];
+        for(int i = 0; i<widthChunks;i++){
+            for(int j = 0; j<heightChunks;j++){
+                for(int k = 0; k<depthChunks;k++) {
 
-        for(int i = 0; i<10;i++){
-            for(int j = 0; j<10;j++){
-                for(int k = 0; k<10;k++) {
-                    arr[i][j][k] = map[i][j][k];
-                    //map[i][j][k] = 0;
-                }
-            }
-        }
+                    IntObject[][][] arr = new IntObject[chunkSize+1][chunkSize+1][chunkSize+1];
 
-        new TerrainChunk(arr, sh);
+                    for(int x = 0; x<chunkSize+1;x++){
+                        for(int y = 0; y<chunkSize+1;y++){
+                            for(int z = 0; z<chunkSize+1;z++) {
+                                arr[x][y][z] = map[x + i*chunkSize][y + j*chunkSize][z + k*chunkSize];
 
-        System.out.println("marching cubes...");
-
-        ArrayList<float[]> voxels = new ArrayList<float[]>();
-        int length = 0;
-
-        for(int i = 0; i<width-1;i++){
-            for(int j = 0; j<height-1;j++){
-                for(int k = 0; k<depth-1;k++) {
-
-                    int verts[][][] = new int[2][2][2];
-
-                    verts[0][0][0] = map[i][j][k].v;
-                    verts[1][0][0] = map[i+1][j][k].v;
-                    verts[0][1][0] = map[i][j+1][k].v;
-                    verts[1][1][0] = map[i+1][j+1][k].v;
-
-                    verts[0][0][1] = map[i][j][k+1].v;
-                    verts[1][0][1] = map[i+1][j][k+1].v;
-                    verts[0][1][1] = map[i][j+1][k+1].v;
-                    verts[1][1][1] = map[i+1][j+1][k+1].v;
-
-                    float[] f = MarchCube.getVoxelFloats(verts);
-
-                    for(int x = 0; x<f.length; x+=3){
-                        f[x] += i;
-                        f[x+1] += j;
-                        f[x+2] += k;
+                            }
+                        }
                     }
 
-                    length += f.length;
-                    voxels.add(f);
+                    chunks[i][j][k] = new TerrainChunk(arr, new Vector3f(i*chunkSize,j*chunkSize,k*chunkSize), sh);
+
                 }
             }
         }
 
-        System.out.println("merge voxels...");
+    }
 
-        float objectData[] = new float[length];
-        float objectColors[] = new float[length];
-        int pointer = 0;
-        int voxelsSize = voxels.size();
+    public void setCursor(Model cursor){
+        this.cursor = cursor;
+        cursorPos = cursor.getPos();
+    }
 
-        int progress = 0;
+    public void update(float delta){
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_UP) == 1){
+            cursorPos.add(new Vector3f(0,0,delta));
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_DOWN) == 1){
+            cursorPos.add(new Vector3f(0,0,-delta));
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_LEFT) == 1){
+            cursorPos.add(new Vector3f(delta,0,0));
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_RIGHT) == 1){
+            cursorPos.add(new Vector3f(-delta,0,0));
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_PAGE_UP) == 1){
+            cursorPos.add(new Vector3f(0,delta,0));
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_PAGE_DOWN) == 1){
+            cursorPos.add(new Vector3f(0,-delta,0));
+        }
 
-        for(int x = 0;x<voxelsSize;x++){
-            if((pointer * 100 / length) > progress+5) {
-                progress = (pointer * 100 / length);
-                System.out.println("progres: " + progress + "%");
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_RIGHT_SHIFT) == 1){
+            int x = (int)Math.floor(cursorPos.x);
+            int y = (int)Math.floor(cursorPos.y);
+            int z = (int)Math.floor(cursorPos.z);
+            if(map[x][y][z].v == 0) {
+                System.out.println("Set Voxel");
+                setVoxel(x, y, z, 1);
             }
-            int voxelLength = voxels.get(x).length;
-            for(int y = 0;y<voxelLength;y+=3){
-                objectData[pointer] = voxels.get(x)[y];
-                objectData[pointer+1] = voxels.get(x)[y+1];
-                objectData[pointer+2] = voxels.get(x)[y+2];
-
-                objectColors[pointer] = 1;
-                objectColors[pointer+1] = voxels.get(x)[y+1]/(height);
-                objectColors[pointer+2] = 0;
-
-                pointer+=3;
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_ENTER) == 1){
+            int x = (int)Math.floor(cursorPos.x);
+            int y = (int)Math.floor(cursorPos.y);
+            int z = (int)Math.floor(cursorPos.z);
+            if(map[x][y][z].v == 1) {
+                System.out.println("Unset Voxel");
+                setVoxel(x, y, z, 0);
             }
         }
 
-        System.out.println("terrain done...");
+        if(cursorPos.x < 0.1) cursorPos.x = 0.1f;
+        if(cursorPos.y < 0.1) cursorPos.y = 0.1f;
+        if(cursorPos.z < 0.1) cursorPos.z = 0.1f;
 
-        model = new Model(objectData, objectColors);
-        model.setShader(sh);
-        model.setColor(new Vector3f(1,0,0));
-        model.setPos(translate);
+        cursor.setPos(new Vector3f((float)Math.floor(cursorPos.x),(float)Math.floor(cursorPos.y),(float)Math.floor(cursorPos.z)));
+    }
+
+    public void setVoxel(int x, int y, int z, int val){
+        map[x][y][z].v = val;
+
+        int chunkX = x/chunkSize;
+        int chunkY = y/chunkSize;
+        int chunkZ = z/chunkSize;
+
+        chunks[chunkX][chunkY][chunkZ].recalculate();
+
+        if(x%chunkSize == 0 && x>0) chunks[chunkX-1][chunkY][chunkZ].recalculate();
+        if(y%chunkSize == 0 && y>0) chunks[chunkX][chunkY-1][chunkZ].recalculate();
+        if(z%chunkSize == 0 && z>0) chunks[chunkX][chunkY][chunkZ-1].recalculate();
 
     }
 
     public void render(){
-        model.render();
+
+        for(int i = 0; i<widthChunks;i++){
+            for(int j = 0; j<heightChunks;j++){
+                for(int k = 0; k<depthChunks;k++) {
+                    chunks[i][j][k].render();
+                }
+            }
+        }
+
+        cursor.render();
     }
 
     private void generateMap(){

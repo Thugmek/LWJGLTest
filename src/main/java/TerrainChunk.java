@@ -10,21 +10,25 @@ public class TerrainChunk {
     int height;
     int depth;
 
+    private ShaderProgram sh;
+    private Vector3f pos;
+
     public TerrainChunk(IntObject[][][] map, Vector3f pos, ShaderProgram sh){
         this.map = map;
+        this.sh = sh;
+        this.pos = pos;
         width = map.length;
         height = map[0].length;
         depth = map[0][0].length;
 
-        for(int i = 0; i<width;i++) {
-            for (int j = 0; j < height; j++) {
-                for (int k = 0; k < depth; k++) {
-                    map[i][j][k].v = 0;
-                }
-            }
-        }
+        recalculate();
+    }
 
+    public void render(){
+        model.render();
+    }
 
+    public void recalculate(){
         ArrayList<float[]> voxels = new ArrayList<float[]>();
         int length = 0;
 
@@ -81,15 +85,11 @@ public class TerrainChunk {
         }
 
         model = new Model(objectData, objectColors);
+
+        //model = new Cube(sh);
         model.setShader(sh);
         model.setColor(new Vector3f(1,0,0));
         model.setPos(pos);
-
-
-    }
-
-    public void render(){
-        model.render();
     }
 
 }
