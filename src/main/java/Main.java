@@ -94,8 +94,6 @@ public class Main {
             t.render();
             c.render();
 
-            //mod.getTransform().rotate(0.000001f*delta,new Vector3f(0,1,0.2f));
-
             glfwSwapBuffers(win);
 
             //FPS limit

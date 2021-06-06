@@ -1,10 +1,14 @@
+import com.google.gson.Gson;
 import org.joml.Random;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
+import java.io.*;
+
 
 public class Terrain {
+
+    private ShaderProgram sh;
 
     private TerrainChunk[][][] chunks;
     private IntObject[][][] map;
@@ -25,21 +29,34 @@ public class Terrain {
     Random r;
 
     public Terrain(ShaderProgram sh, Vector3f translate){
+
+        this.sh = sh;
+
         System.out.println("generating terrain...");
 
         width = (widthChunks*chunkSize)+1;
         height = (heightChunks*chunkSize)+1;
         depth = (depthChunks*chunkSize)+1;
 
-        map = new IntObject[width][height][depth];
         chunks = new TerrainChunk[widthChunks][heightChunks][depthChunks];
 
         r = new Random(314159);
 
         System.out.println("generating map...");
 
-        generateMap();
+        load("world.save");
 
+        if(map == null) {
+            map = new IntObject[width][height][depth];
+            generateMap();
+            generateChunks();
+
+            save("world.save");
+        }
+
+    }
+
+    private void generateChunks(){
         for(int i = 0; i<widthChunks;i++){
             for(int j = 0; j<heightChunks;j++){
                 for(int k = 0; k<depthChunks;k++) {
@@ -60,7 +77,6 @@ public class Terrain {
                 }
             }
         }
-
     }
 
     public void setCursor(Model cursor){
@@ -86,6 +102,13 @@ public class Terrain {
         }
         if(KeyboardInput.getKey(GLFW.GLFW_KEY_PAGE_DOWN) == 1){
             cursorPos.add(new Vector3f(0,-delta,0));
+        }
+
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_L) == 1){
+            load("world.save");
+        }
+        if(KeyboardInput.getKey(GLFW.GLFW_KEY_K) == 1){
+            save("world.save");
         }
 
         if(KeyboardInput.getKey(GLFW.GLFW_KEY_RIGHT_SHIFT) == 1){
@@ -190,5 +213,46 @@ public class Terrain {
         if(alive < 11) return new IntObject(0);;
 
         return map[i][j][k];
+    }
+
+    public void save(String save){
+        Gson gson = new Gson();
+        String json = gson.toJson(map);
+
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter("src/main/resources/saves/" + save));
+
+            bw.write(json);
+            bw.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void load(String save){
+        Gson gson = new Gson();
+
+        map = null;
+
+        StringBuilder contentBuilder = new StringBuilder();
+        try
+        {
+            BufferedReader br = new BufferedReader(new FileReader("src/main/resources/saves/" + save));
+            String sCurrentLine;
+            while ((sCurrentLine = br.readLine()) != null)
+            {
+                contentBuilder.append(sCurrentLine).append("\n");
+            }
+            map = gson.fromJson(contentBuilder.toString(),IntObject[][][].class);
+            generateChunks();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
     }
 }
