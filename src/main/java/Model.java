@@ -11,13 +11,15 @@ import java.nio.FloatBuffer;
 
 public class Model {
 
-    private int tris;
-    private int vb_id;
-    private int cb_id;
-    private ShaderProgram shader;
-    private Vector3f color;
+    protected int tris;
+    protected int vb_id;
+    protected int cb_id;
+    protected ShaderProgram shader;
+    protected Vector3f color;
 
-    private Vector3f pos;
+    protected Vector3f pos;
+
+    protected Model(){};
 
     public Model(float[] verts, float[] cols){
         pos = new Vector3f(0,0,0);

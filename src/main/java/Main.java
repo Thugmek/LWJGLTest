@@ -1,13 +1,16 @@
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL14.GL_DEPTH_COMPONENT32;
 
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 
 
 public class Main {
@@ -32,13 +35,15 @@ public class Main {
         GL.createCapabilities();
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         ShaderProgram shaderProgram = null;
         try {
             shaderProgram = new ShaderProgram();
-            shaderProgram.createVertexShader(loadString("shader.vs"));
-            shaderProgram.createFragmentShader(loadString("shader.fs"));
-            shaderProgram.createGeometryShader(loadString("shader.gs"));
+            shaderProgram.createVertexShader(loadString("shaders/shader.vs"));
+            shaderProgram.createFragmentShader(loadString("shaders/shader.fs"));
+            shaderProgram.createGeometryShader(loadString("shaders/shader.gs"));
             shaderProgram.link();
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,10 +52,21 @@ public class Main {
         ShaderProgram wireShaderProgram = null;
         try {
             wireShaderProgram = new ShaderProgram();
-            wireShaderProgram.createVertexShader(loadString("shader.vs"));
-            wireShaderProgram.createFragmentShader(loadString("wireShader.fs"));
-            wireShaderProgram.createGeometryShader(loadString("wireShader.gs"));
+            wireShaderProgram.createVertexShader(loadString("shaders/shader.vs"));
+            wireShaderProgram.createFragmentShader(loadString("shaders/wireShader.fs"));
+            wireShaderProgram.createGeometryShader(loadString("shaders/wireShader.gs"));
             wireShaderProgram.link();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        ShaderProgram particleShaderProgram = null;
+        try {
+            particleShaderProgram = new ShaderProgram();
+            particleShaderProgram.createVertexShader(loadString("shaders/shader.vs"));
+            particleShaderProgram.createFragmentShader(loadString("shaders/particleShader.fs"));
+            particleShaderProgram.createGeometryShader(loadString("shaders/particleShader.gs"));
+            particleShaderProgram.link();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -59,6 +75,10 @@ public class Main {
 
         Terrain t = new Terrain(shaderProgram, new Vector3f(0,0,0));
         Cube c = new Cube(wireShaderProgram);
+
+        Particle p = new Particle();
+        p.setShader(particleShaderProgram);
+        p.setPos(new Vector3f(0,0,0));
 
         t.setCursor(c);
 
@@ -90,9 +110,21 @@ public class Main {
 
             camera.forShader(shaderProgram);
             camera.forShader(wireShaderProgram);
+            camera.forShader(particleShaderProgram);
 
             t.render();
-            c.render();
+
+            FloatBuffer buff = BufferUtils.createFloatBuffer(1);
+
+            glReadPixels(mode.width()/2,mode.height()/2,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,buff);
+
+            float f = buff.get(0);
+            Vector3f cur = camera.getCursor(f);
+            if(cur != null) {
+                c.setPos(new Vector3f(Math.round(cur.x),Math.round(cur.y),Math.round(cur.z)));
+                c.render();
+            }
+            p.render();
 
             glfwSwapBuffers(win);
 

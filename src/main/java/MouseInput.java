@@ -50,4 +50,8 @@ public class MouseInput {
 
         return pos;
     }
+
+    public static int getMouseButton(int button){
+        return glfwGetMouseButton(window,button);
+    }
 }

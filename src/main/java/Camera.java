@@ -16,6 +16,7 @@ public class Camera {
     private Vector3f up;
     private Vector3f left;
     private Matrix4f worldMat;
+    private Matrix4f perspMat;
 
     public Camera(Vector3f pos, float azimuth, float zenith){
         this.pos = pos;
@@ -66,6 +67,7 @@ public class Camera {
 
         left = new Vector3f(-(float)Math.cos(azimuth),0,(float)Math.sin(azimuth));
 
+        perspMat = new Matrix4f().setPerspective(fov,8.0f/6.0f,0.01f,1000);
     }
 
     public void onUpdate(float delta){
@@ -104,5 +106,29 @@ public class Camera {
         shader.setWorldTransform(worldMat);
         shader.setProjectionTransform(new Matrix4f().setPerspective(fov,8.0f/6.0f,0.01f,1000));
         shader.unbind();
+    }
+
+    public Vector3f getCursor(float depth){
+
+        //Matrix4f iWorldMat = new Matrix4f(worldMat).invert().transpose();
+        Matrix4f iPerspMat = new Matrix4f(perspMat).invert().transpose();
+
+        /*Vector4f v = new Vector4f(0,0,0.05f,1).mul(iWorldMat).mul(iPerspMat);
+
+        v.div(v.w);
+
+        System.out.println(v);*/
+        Vector3f f = new Vector3f(front);
+
+        if(depth<1){
+            float d = 0.01f/(1-depth);
+            if(d>30) return null;
+            f.mul(d);
+            Vector3f p = new Vector3f(pos).add(new Vector3f(f.x,f.y,f.z));
+            return p;
+        }
+
+        return null;
+
     }
 }

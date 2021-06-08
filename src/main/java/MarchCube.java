@@ -297,29 +297,34 @@ public class MarchCube {
                     {}
             };
 
-    public static float[] getVoxelFloats(int [][][] verts){
+    public static VoxelResult getVoxelFloats(VoxelObject [][][] verts){
 
         int cubeindex = 0;
-        if (verts[0][0][0] == 0) cubeindex |= 1;
-        if (verts[1][0][0] == 0) cubeindex |= 2;
-        if (verts[1][0][1] == 0) cubeindex |= 4;
-        if (verts[0][0][1] == 0) cubeindex |= 8;
-        if (verts[0][1][0] == 0) cubeindex |= 16;
-        if (verts[1][1][0] == 0) cubeindex |= 32;
-        if (verts[1][1][1] == 0) cubeindex |= 64;
-        if (verts[0][1][1] == 0) cubeindex |= 128;
+        if (verts[0][0][0].v == 0) cubeindex |= 1;
+        if (verts[1][0][0].v == 0) cubeindex |= 2;
+        if (verts[1][0][1].v == 0) cubeindex |= 4;
+        if (verts[0][0][1].v == 0) cubeindex |= 8;
+        if (verts[0][1][0].v == 0) cubeindex |= 16;
+        if (verts[1][1][0].v == 0) cubeindex |= 32;
+        if (verts[1][1][1].v == 0) cubeindex |= 64;
+        if (verts[0][1][1].v == 0) cubeindex |= 128;
 
         //cubeindex = 2;
 
         int len = triTable[cubeindex].length;
 
-        float[] ret = new float[len*3];
+        float[] v_out = new float[len*3];
+        float[] c_out = new float[len*3];
 
         for (int i = 0;i<len;i++) {
             Vector3f v = geometryVerts[triTable[cubeindex][i]];
-            ret[i*3] = v.x;
-            ret[i*3+1] = v.y;
-            ret[i*3+2] = v.z;
+            v_out[i*3] = v.x;
+            v_out[i*3+1] = v.y;
+            v_out[i*3+2] = v.z;
+
+            c_out[i*3] = verts[0][0][0].color.x;
+            c_out[i*3+1] = verts[0][0][0].color.y;
+            c_out[i*3+2] =verts[0][0][0].color.z;
         }
 
         /*for (float f:ret) {
@@ -327,6 +332,6 @@ public class MarchCube {
         }
         System.out.println();*/
 
-        return ret;
+        return new VoxelResult(v_out,c_out);
     }
 }
